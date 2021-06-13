@@ -1,0 +1,125 @@
+-- 계정 생성
+CREATE USER boardthird IDENTIFIED BY boardthird;
+GRANT CONNECT, RESOURCE,DBA TO boardthird;
+GRANT ALTER SESSION TO boardthird;
+
+conn boardthird/boardthird;
+show user;
+
+
+-- 회원 시퀀스
+DROP SEQUENCE USER_SEQ;
+CREATE SEQUENCE USER_SEQ
+      START WITH 1
+    INCREMENT BY 1;
+
+-- 게시글 시퀀스
+DROP SEQUENCE BOARD_SEQ;
+CREATE SEQUENCE BOARD_SEQ
+    START WITH 1
+    INCREMENT BY 1;
+
+
+
+--회원정보
+DROP TABLE TB_USER CASCADE CONSTRAINTS;
+CREATE TABLE TB_USER(
+  USER_CODE VARCHAR2(20),             -- 유저코드
+  ID VARCHAR2(20),                  -- 아이디
+  PW VARCHAR2(20),                   -- 패스워드
+  EMAIL VARCHAR2(50),                      -- 이메일
+  USER_IMAGE VARCHAR2(100),               -- 유저이미지
+  NAME VARCHAR2(20),                       -- 이름
+  BIRTH VARCHAR2(20),                      -- 생일
+  POST_NUM VARCHAR2(20),                   -- 우편번호
+  PHONE_CD VARCHAR2(3),                    -- 전화번호앞자리
+  PHONE_NUM VARCHAR2(20),                  -- 전화번호뒷자리
+  ADDRESS VARCHAR2(100),                   -- 주소
+  ENT_DATE VARCHAR2(30),                   -- 회원가입일
+  GRADE VARCHAR2(10) DEFAULT 'USER'        -- 회원등급  
+);
+ALTER TABLE TB_USER ADD CONSTRAINT TB_USER_PK PRIMARY KEY(USER_CODE);
+commit;
+
+
+--게시판정보
+DROP TABLE TB_BOARD CASCADE CONSTRAINTS;
+CREATE TABLE TB_BOARD(
+  BOARD_NO NUMBER(30) NOT NULL,             -- 게시글번호
+  BOARD_TITLE VARCHAR2(1000) NOT NULL,        -- 게시글제목
+  BOARD_CONTENTS VARCHAR2(4000),     -- 게시글내용
+  BOARD_DATE DATE,            -- 게시글작성날짜
+  USER_CODE VARCHAR2(20) NOT NULL,            -- 유저코드
+  GRADE VARCHAR2(10),                    --회원 등급
+  BOARD_HITS NUMBER DEFAULT 0,     -- 조회수
+  BOARD_RATING_LIKE NUMBER DEFAULT 0,   -- 좋아요
+  BOARD_RATING_HATE NUMBER DEFAULT 0, -- 싫어요
+  CONSTRAINT TB_BOARD_PK PRIMARY KEY(BOARD_NO),
+  CONSTRAINT TB_BOARD_FK_USER FOREIGN KEY(USER_CODE) REFERENCES TB_USER(USER_CODE));
+
+--댓글정보
+DROP TABLE TB_REPLY CASCADE CONSTRAINTS;
+CREATE TABLE TB_REPLY(
+  BOARD_NO NUMBER(30),             -- 게시글번호
+  USER_CODE VARCHAR2(20),            -- 유저코드
+  USER_REPLY_NO NUMBER(3),           -- 댓글일련번호
+  USER_REPLY VARCHAR2(1000),         -- 댓글내용
+  REPLY_DATE VARCHAR2(30),           -- 댓글날짜
+  CONSTRAINT TB_REPLY_PK PRIMARY KEY(BOARD_NO, USER_CODE, USER_REPLY_NO),
+  CONSTRAINT TB_REPLY_FK_BOARD FOREIGN KEY(BOARD_NO) REFERENCES TB_BOARD(BOARD_NO));
+
+-- 공감도정보
+DROP TABLE TB_MARK CASCADE CONSTRAINTS;
+CREATE TABLE TB_MARK(
+  BOARD_NO NUMBER(30),             -- 게시판_넘버
+  USER_CODE VARCHAR2(20),            -- 유저코드
+  MARK_RATING_LIKE NUMBER,                -- 좋아요
+  MARK_RATING_HATE NUMBER,              -- 싫어요
+  CONSTRAINT TB_MARK_PK PRIMARY KEY(BOARD_NO, USER_CODE),
+  CONSTRAINT TB_MARK_FK_BOARD FOREIGN KEY(BOARD_NO) REFERENCES TB_BOARD(BOARD_NO),
+  CONSTRAINT TB_MARK_FK_USER FOREIGN KEY(USER_CODE) REFERENCES TB_USER(USER_CODE));
+
+--우편 번호
+DROP TABLE TB_POST CASCADE CONSTRAINTS;
+CREATE TABLE TB_POST(
+ZIPCODE VARCHAR2(10)
+,SIDO VARCHAR2(50)
+,GUGUN VARCHAR2(100)
+,DONG VARCHAR2(100)
+,BUNJI VARCHAR2(50)
+,SEQ NUMBER PRIMARY KEY);
+
+commit;
+
+-- 'ADMIN'등급으로 유저 생성 쿼리문 
+INSERT INTO TB_USER(
+				USER_CODE
+				  , ID
+				  , PW
+				  , EMAIL
+				  , USER_IMAGE
+				  , NAME
+				  , BIRTH
+				  , POST_NUM
+				  , PHONE_CD
+				  , PHONE_NUM
+				  , ADDRESS
+				  , ENT_DATE
+                  , GRADE
+				  ) VALUES(
+				  USER_SEQ.NEXTVAL
+				  , 111
+				  , 111
+				  , '111@gmail.com'
+				  , 111
+				  , 111
+				  , '94.11.15'
+				  , 111
+				  , 02
+				  , 111
+				  , 111
+				  , TO_CHAR(SYSDATE, 'YYYY-MM-DD-HH24:MI')
+                  , 'ADMIN'
+				  );
+commit;
+
